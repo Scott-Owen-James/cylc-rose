@@ -53,7 +53,11 @@ below.
  - Jonny Williams
  - Mark Dawson
  - Christopher Bennett
+<<<<<<< HEAD
  - Samuel Denton
+=======
+ - Scott Owen James
+>>>>>>> a187015 (updating flake8 rules, closes #424)
 <!-- end-shortlog -->
 
 (All contributors are identifiable with email addresses in the git version

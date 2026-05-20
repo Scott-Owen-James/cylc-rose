@@ -170,7 +170,8 @@ def process_config(
                 if section == 'env':
                     environ[key] = node.value
             except UnboundEnvironmentVariableError as exc:
-                raise ConfigProcessError(['env', key], node.value, exc)
+                raise ConfigProcessError(['env', key],
+                                         node.value, exc) from exc
 
     # For each of the template language sections extract items to a simple
     # dict to be returned.
