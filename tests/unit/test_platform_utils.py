@@ -25,7 +25,6 @@ import sqlite3
 from uuid import uuid4
 
 from cylc.rose.platform_utils import (
-    get_compat_mode,
     get_platform_from_task_def,
     get_platforms_from_task_jobs,
 )
@@ -213,24 +212,6 @@ def test_get_platform_from_task_def_subshell(
     mock_glbl_cfg(*MOCK_GLBL_CFG)
     platform = get_platform_from_task_def(fake_flow[0], task)
     assert platform['name'] == expected
-
-
-@pytest.mark.parametrize(
-    'create, expect',
-    (
-        (['suite.rc', 'log/conf/flow-processed.cylc'], True),
-        (['suite.rc', 'foo/bar/any-old.file'], True),
-        (['flow.cylc', 'log/conf/flow-processed.cylc'], False),
-        (['flow.cylc', 'where/flow-processed.cylc'], False),
-    )
-)
-def test_get_compat_mode(tmp_path, create, expect):
-    """It checks whether there is a suite.rc two directories up."""
-    for file in create:
-        file = tmp_path / file
-        file.parent.mkdir(parents=True, exist_ok=True)
-        file.touch()
-    assert get_compat_mode(tmp_path) == expect
 
 
 @pytest.mark.parametrize(

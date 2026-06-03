@@ -36,7 +36,6 @@ from typing import (
 
 from cylc.flow import LOG
 from cylc.flow.exceptions import CylcError
-from cylc.flow.flags import cylc7_back_compat
 from cylc.flow.cfgspec.glbl_cfg import glbl_cfg
 from cylc.flow.hostuserutil import get_host
 from metomi.isodatetime.datetimeoper import DateTimeOperator
@@ -65,8 +64,6 @@ SET_BY_CYLC = 'set by Cylc'
 ROSE_ORIG_HOST_INSTALLED_OVERRIDE_STRING = (
     ' ROSE_ORIG_HOST set by cylc install.'
 )
-MESSAGE = 'message'
-ALL_MODES = 'all modes'
 STANDARD_VARS = [
     ('ROSE_ORIG_HOST', get_host()),
     ('ROSE_VERSION', ROSE_VERSION),
@@ -774,42 +771,30 @@ def deprecation_warnings(config_tree):
         - "root-dir"
         - "jinja2:suite.rc"
         - root-dir
-
-    If ALL_MODES is True this deprecation will ignore whether there is a
-    flow.cylc or suite.rc in the workflow directory.
     """
-
-    deprecations = {
-        'jinja2:suite.rc': {
-            MESSAGE: (
-                "'rose-suite.conf[jinja2:suite.rc]' is deprecated."
-                " Use [template variables] instead."
-            ),
-            ALL_MODES: False,
-        },
-        'jinja2:flow.cylc': {
-            MESSAGE: (
-                "'rose-suite.conf[jinja2:flow.cylc]' is not used by Cylc."
-                " Use [template variables] instead."
-            ),
-            ALL_MODES: False,
-        },
-        'root-dir': {
-            MESSAGE: (
-                'You have set "rose-suite.conf[root-dir]", '
-                'which is not supported at '
-                'Cylc 8. Use `[install] symlink dirs` in global.cylc '
-                'instead.'
-            ),
-            ALL_MODES: True,
-        },
-    }
+    deprecations = (
+        (
+            'jinja2:suite.rc',
+            "'rose-suite.conf[jinja2:suite.rc]' is deprecated."
+            " Use [template variables] instead.",
+        ),
+        (
+            'jinja2:flow.cylc',
+            "'rose-suite.conf[jinja2:flow.cylc]' is not used by Cylc."
+            " Use [template variables] instead.",
+        ),
+        (
+            'root-dir',
+            'You have set "rose-suite.conf[root-dir]", '
+            'which is not supported at '
+            'Cylc 8. Use `[install] symlink dirs` in global.cylc '
+            'instead.',
+        ),
+    )
     for string in list(config_tree.node):
-        for name, info in deprecations.items():
-            if (
-                info[ALL_MODES] or not cylc7_back_compat
-            ) and name in string.lower():
-                LOG.warning(info[MESSAGE])
+        for name, info in deprecations:
+            if name in string.lower():
+                LOG.warning(info)
 
 
 def load_rose_config(

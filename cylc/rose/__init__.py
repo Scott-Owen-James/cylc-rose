@@ -65,9 +65,8 @@ The following sections are permitted in the ``rose-suite.conf`` files:
 
 .. note::
 
-   For compatibility with Cylc 7, section ``[suite.rc:jinja2]`` will be
-   processed, but is deprecated and provided for ease of porting Cylc 7
-   workflows.
+   The legacy ``[suite.rc:jinja2]`` section remains supported, but is
+   deprecated, please rename it to ``[template variables]``.
 
 
 The ``global.cylc`` file

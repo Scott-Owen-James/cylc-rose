@@ -187,16 +187,12 @@ def _pytest_passed(request: pytest.FixtureRequest) -> bool:
 def _cylc_inspection_cli(capsys, caplog, script, gop):
     """Access the CLI for cylc scripts inspecting configurations
     """
-    async def _inner(srcpath, args=None, n_args=3):
+    async def _inner(srcpath, args=None):
         parser = gop()
         options = Options(parser, args)()
         output = SimpleNamespace()
 
-        if n_args == 3:
-            await script(parser, options, str(srcpath))
-        if n_args == 2:
-            # Don't include the parser:
-            await script(options, str(srcpath))
+        await script(options, str(srcpath))
 
         output.logging = '\n'.join([i.message for i in caplog.records])
         output.out, output.err = capsys.readouterr()
@@ -310,13 +306,13 @@ async def cylc_inspect_scripts(capsys, caplog):
         results = {}
 
         # Handle scripts taking a parser or just the output of the parser:
-        for script_name, n_args in {
-            'config': 3,
-            'list': 2,
-            'graph': 2,
-            'view': 2,
-            'validate': 3,
-        }.items():
+        for script_name in (
+            'config',
+            'list',
+            'graph',
+            'view',
+            'validate',
+        ):
 
             # Import the script modules:
             script_module = importlib.import_module(
@@ -330,7 +326,7 @@ async def cylc_inspect_scripts(capsys, caplog):
                 script = script_module.run
             else:
                 raise UsageError(
-                    f'Script "{script}\'s" module does not contain a '
+                    f'"{script_name}\" does not contain a '
                     '"_main" or "run" function'
                 )
 
@@ -343,7 +339,7 @@ async def cylc_inspect_scripts(capsys, caplog):
                 caplog,
                 script,
                 script_module.get_option_parser,
-            )(wid, args, n_args=n_args)
+            )(wid, args)
 
         # Return results for more checking if required:
         return results

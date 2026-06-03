@@ -111,33 +111,18 @@ def test_warn_if_root_dir_set(root_dir_config, tmp_path, caplog):
 
 
 @pytest.mark.parametrize(
-    'compat_mode',
-    [
-        pytest.param(True, id='back-compat'),
-        pytest.param(False, id='no-back-compat')
-    ]
-)
-@pytest.mark.parametrize(
     'rose_config', [
         'jinja2:suite.rc',
         'jinja2:flow.cylc',
         'JinjA2:flOw.cylC',
     ]
 )
-def test_warn_if_old_templating_set(
-    compat_mode, rose_config, tmp_path, caplog, monkeypatch
-):
+def test_warn_if_old_templating_set(rose_config, tmp_path, caplog):
     """Test using unsupported root-dir config raises error."""
-    monkeypatch.setattr(
-        'cylc.rose.utilities.cylc7_back_compat', compat_mode
-    )
     (tmp_path / 'rose-suite.conf').write_text(f'[{rose_config}]')
     load_rose_config(tmp_path)
     msg = "Use [template variables]"
-    if compat_mode:
-        assert not caplog.records
-    else:
-        assert msg in caplog.records[0].message
+    assert msg in caplog.records[0].message
 
 
 @pytest.mark.parametrize(

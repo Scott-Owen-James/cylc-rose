@@ -281,27 +281,8 @@ def test_ROSE_ORIG_HOST_replacement_behaviour(
         assert node['env']['ROSE_ORIG_HOST'].value == 'IMPLAUSIBLE_HOST_NAME'
 
 
-@pytest.mark.parametrize(
-    'compat_mode, must_include, must_exclude',
-    (
-        (True, None, 'Use [template variables]'),
-        (True, 'root-dir', None),
-        (False, 'Use [template variables]', None),
-        (False, 'root-dir', None),
-    )
-)
-def test_deprecation_warnings(
-    caplog, monkeypatch, compat_mode, must_include, must_exclude
-):
-    """Method logs warnings correctly.
-
-    Two node items are set:
-
-    * ``jinja2:suite.rc`` should not cause a warning in compatibility mode.
-    * ``root-dir=/somewhere`` should always lead to a warning being logged.
-
-    Error messages about
-    """
+def test_deprecation_warnings(caplog):
+    """It should warn over deprecated Rose config sections."""
     # Create a node to pass to the method
     # (It's not a tree test because we can use a simpleNamespace in place of
     # a tree object):
@@ -310,16 +291,13 @@ def test_deprecation_warnings(
     node.set(['root-dir', '~foo'])
     tree = SimpleNamespace(node=node)
 
-    # Patch compatibility mode flag and run the function under test:
-    monkeypatch.setattr('cylc.rose.utilities.cylc7_back_compat', compat_mode)
     deprecation_warnings(tree)
 
     # Check that warnings have/not been logged:
-    records = '\n'.join([i.message for i in caplog.records])
-    if must_include:
-        assert must_include in records
-    else:
-        assert must_exclude not in records
+    records = '\n'.join(i.message for i in caplog.records)
+
+    assert 'root-dir' in records
+    assert 'Use [template variables]' in records
 
 
 @pytest.mark.parametrize(
