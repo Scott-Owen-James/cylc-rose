@@ -52,7 +52,7 @@ from metomi.rose.config_processor import ConfigProcessError
 from metomi.rose.config_tree import ConfigTree
 from metomi.rose.env import UnboundEnvironmentVariableError, env_var_process
 
-from cylc.rose.jinja2_parser import Parser, patch_jinja2_leading_zeros
+from cylc.rose.jinja2_parser import Parser
 
 if TYPE_CHECKING:
     from cylc.flow.option_parsers import Values
@@ -184,26 +184,22 @@ def process_config(
 
     # Add the entire plugin_result to ROSE_SUITE_VARIABLES to allow for
     # programatic access.
-    with patch_jinja2_leading_zeros():
-        # BACK COMPAT: patch_jinja2_leading_zeros
-        # back support zero-padded integers for a limited time to help
-        # users migrate before upgrading cylc-flow to Jinja2>=3.1
-        parser = Parser()
-        for key, value in plugin_result['template_variables'].items():
-            # The special variables are already Python variables.
-            if key not in ['ROSE_ORIG_HOST', 'ROSE_VERSION', 'ROSE_SITE']:
-                try:
-                    plugin_result['template_variables'][key] = (
-                        parser.literal_eval(value)
-                    )
-                except Exception:
-                    raise ConfigProcessError(
-                        [templating, key],
-                        value,
-                        f'Invalid template variable: {value}'
-                        '\nMust be a valid Python or Jinja2 literal'
-                        ' (note strings "must be quoted").',
-                    ) from None
+    parser = Parser()
+    for key, value in plugin_result['template_variables'].items():
+        # The special variables are already Python variables.
+        if key not in ['ROSE_ORIG_HOST', 'ROSE_VERSION', 'ROSE_SITE']:
+            try:
+                plugin_result['template_variables'][key] = (
+                    parser.literal_eval(value)
+                )
+            except Exception:
+                raise ConfigProcessError(
+                    [templating, key],
+                    value,
+                    f'Invalid template variable: {value}'
+                    '\nMust be a valid Python or Jinja2 literal'
+                    ' (note strings "must be quoted").',
+                ) from None
 
     # Add ROSE_SUITE_VARIABLES to plugin_result of templating engines in use.
     plugin_result['template_variables']['ROSE_SUITE_VARIABLES'] = (
