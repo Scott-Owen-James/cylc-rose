@@ -1,4 +1,4 @@
-# FORMAT: <proper-name>  <proper-email>  <commit-name>  <commit-email>   
+# FORMAT: <proper-name>  <proper-email>  <commit-name>  <commit-email>
 # Omit commit-name or commit-email if same as proper
 
 Bruno Kinoshita        <kinow@apache.org>                   Bruno P. Kinoshita     <kinow@users.noreply.github.com>
@@ -11,3 +11,4 @@ github-actions[bot]    <github-actions@no-reply.github.com>                     
 Hilary Oliver          <hilary.j.oliver@gmail.com>          Hilary James Oliver
 Christopher Bennett    <christopher.bennett@metoffice.gov.uk>
 Samuel Denton          <samuel.denton@metoffice.gov.uk>     samuel-denton          <samuel.denton@metoffice.gov.uk>
+Scott Owen James       <scott.james@metoffice.gov.uk>        Scott-Owen-James          <scott.james@metoffice.gov.uk>
