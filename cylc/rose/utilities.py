@@ -36,7 +36,6 @@ from typing import (
 
 from cylc.flow import LOG
 from cylc.flow.exceptions import CylcError
-from cylc.flow.flags import cylc7_back_compat
 from cylc.flow.cfgspec.glbl_cfg import glbl_cfg
 from cylc.flow.hostuserutil import get_host
 from metomi.isodatetime.datetimeoper import DateTimeOperator
@@ -53,7 +52,7 @@ from metomi.rose.config_processor import ConfigProcessError
 from metomi.rose.config_tree import ConfigTree
 from metomi.rose.env import UnboundEnvironmentVariableError, env_var_process
 
-from cylc.rose.jinja2_parser import Parser, patch_jinja2_leading_zeros
+from cylc.rose.jinja2_parser import Parser
 
 if TYPE_CHECKING:
     from cylc.flow.option_parsers import Values
@@ -65,8 +64,6 @@ SET_BY_CYLC = 'set by Cylc'
 ROSE_ORIG_HOST_INSTALLED_OVERRIDE_STRING = (
     ' ROSE_ORIG_HOST set by cylc install.'
 )
-MESSAGE = 'message'
-ALL_MODES = 'all modes'
 STANDARD_VARS = [
     ('ROSE_ORIG_HOST', get_host()),
     ('ROSE_VERSION', ROSE_VERSION),
@@ -188,26 +185,22 @@ def process_config(
 
     # Add the entire plugin_result to ROSE_SUITE_VARIABLES to allow for
     # programatic access.
-    with patch_jinja2_leading_zeros():
-        # BACK COMPAT: patch_jinja2_leading_zeros
-        # back support zero-padded integers for a limited time to help
-        # users migrate before upgrading cylc-flow to Jinja2>=3.1
-        parser = Parser()
-        for key, value in plugin_result['template_variables'].items():
-            # The special variables are already Python variables.
-            if key not in ['ROSE_ORIG_HOST', 'ROSE_VERSION', 'ROSE_SITE']:
-                try:
-                    plugin_result['template_variables'][key] = (
-                        parser.literal_eval(value)
-                    )
-                except Exception:
-                    raise ConfigProcessError(
-                        [templating, key],
-                        value,
-                        f'Invalid template variable: {value}'
-                        '\nMust be a valid Python or Jinja2 literal'
-                        ' (note strings "must be quoted").',
-                    ) from None
+    parser = Parser()
+    for key, value in plugin_result['template_variables'].items():
+        # The special variables are already Python variables.
+        if key not in ['ROSE_ORIG_HOST', 'ROSE_VERSION', 'ROSE_SITE']:
+            try:
+                plugin_result['template_variables'][key] = (
+                    parser.literal_eval(value)
+                )
+            except Exception:
+                raise ConfigProcessError(
+                    [templating, key],
+                    value,
+                    f'Invalid template variable: {value}'
+                    '\nMust be a valid Python or Jinja2 literal'
+                    ' (note strings "must be quoted").',
+                ) from None
 
     # Add ROSE_SUITE_VARIABLES to plugin_result of templating engines in use.
     plugin_result['template_variables']['ROSE_SUITE_VARIABLES'] = (
@@ -775,42 +768,30 @@ def deprecation_warnings(config_tree):
         - "root-dir"
         - "jinja2:suite.rc"
         - root-dir
-
-    If ALL_MODES is True this deprecation will ignore whether there is a
-    flow.cylc or suite.rc in the workflow directory.
     """
-
-    deprecations = {
-        'jinja2:suite.rc': {
-            MESSAGE: (
-                "'rose-suite.conf[jinja2:suite.rc]' is deprecated."
-                " Use [template variables] instead."
-            ),
-            ALL_MODES: False,
-        },
-        'jinja2:flow.cylc': {
-            MESSAGE: (
-                "'rose-suite.conf[jinja2:flow.cylc]' is not used by Cylc."
-                " Use [template variables] instead."
-            ),
-            ALL_MODES: False,
-        },
-        'root-dir': {
-            MESSAGE: (
-                'You have set "rose-suite.conf[root-dir]", '
-                'which is not supported at '
-                'Cylc 8. Use `[install] symlink dirs` in global.cylc '
-                'instead.'
-            ),
-            ALL_MODES: True,
-        },
-    }
+    deprecations = (
+        (
+            'jinja2:suite.rc',
+            "'rose-suite.conf[jinja2:suite.rc]' is deprecated."
+            " Use [template variables] instead.",
+        ),
+        (
+            'jinja2:flow.cylc',
+            "'rose-suite.conf[jinja2:flow.cylc]' is not used by Cylc."
+            " Use [template variables] instead.",
+        ),
+        (
+            'root-dir',
+            'You have set "rose-suite.conf[root-dir]", '
+            'which is not supported at '
+            'Cylc 8. Use `[install] symlink dirs` in global.cylc '
+            'instead.',
+        ),
+    )
     for string in list(config_tree.node):
-        for name, info in deprecations.items():
-            if (
-                info[ALL_MODES] or not cylc7_back_compat
-            ) and name in string.lower():
-                LOG.warning(info[MESSAGE])
+        for name, info in deprecations:
+            if name in string.lower():
+                LOG.warning(info)
 
 
 def load_rose_config(
